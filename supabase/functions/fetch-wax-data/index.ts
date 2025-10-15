@@ -154,28 +154,33 @@ Deno.serve(async (req) => {
     }
 
     // Process and insert pools from Waxonedge
-    const waxonedgePoolsData = waxonedgePools.slice(0, 100).map(pool => {
+    const waxonedgePoolsMap = new Map();
+    waxonedgePools.forEach(pool => {
       const [token0, token1] = [pool.token0.contract, pool.token1.contract].sort();
       const pairKey = `${token0}|${token1}|${pool.src}`;
       const isWaxPair = pool.token0.contract === 'eosio.token' || pool.token1.contract === 'eosio.token';
       
-      return {
-        pair_key: pairKey,
-        dex_source: pool.src,
-        token0_contract: pool.token0.contract,
-        token0_symbol: pool.token0.symbol.ticker,
-        token1_contract: pool.token1.contract,
-        token1_symbol: pool.token1.symbol.ticker,
-        reserve0: pool.reserve0,
-        reserve1: pool.reserve1,
-        tvl_usd: 0,
-        volume_24h_usd: 0,
-        price: pool.reserve1 / pool.reserve0,
-        is_wax_pair: isWaxPair,
-        has_arbitrage: false,
-        last_updated: new Date().toISOString()
-      };
+      // Only keep one entry per unique pair_key
+      if (!waxonedgePoolsMap.has(pairKey)) {
+        waxonedgePoolsMap.set(pairKey, {
+          pair_key: pairKey,
+          dex_source: pool.src,
+          token0_contract: pool.token0.contract,
+          token0_symbol: pool.token0.symbol.ticker,
+          token1_contract: pool.token1.contract,
+          token1_symbol: pool.token1.symbol.ticker,
+          reserve0: pool.reserve0,
+          reserve1: pool.reserve1,
+          tvl_usd: 0,
+          volume_24h_usd: 0,
+          price: pool.reserve1 / pool.reserve0,
+          is_wax_pair: isWaxPair,
+          has_arbitrage: false,
+          last_updated: new Date().toISOString()
+        });
+      }
     });
+    const waxonedgePoolsData = Array.from(waxonedgePoolsMap.values()).slice(0, 100);
 
     console.log(`Inserting ${waxonedgePoolsData.length} pools from Waxonedge...`);
     const { error: waxonedgePoolsError } = await supabase
@@ -189,28 +194,33 @@ Deno.serve(async (req) => {
     }
 
     // Process and insert pools from Alcor
-    const alcorPoolsData = alcorPools.slice(0, 100).map(pool => {
+    const alcorPoolsMap = new Map();
+    alcorPools.forEach(pool => {
       const [tokenA, tokenB] = [pool.tokenA.contract, pool.tokenB.contract].sort();
       const pairKey = `${tokenA}|${tokenB}|alcor`;
       const isWaxPair = pool.tokenA.contract === 'eosio.token' || pool.tokenB.contract === 'eosio.token';
       
-      return {
-        pair_key: pairKey,
-        dex_source: 'alcor',
-        token0_contract: pool.tokenA.contract,
-        token0_symbol: pool.tokenA.symbol,
-        token1_contract: pool.tokenB.contract,
-        token1_symbol: pool.tokenB.symbol,
-        reserve0: 0,
-        reserve1: 0,
-        tvl_usd: pool.tvlUSD || 0,
-        volume_24h_usd: pool.volumeUSD24 || 0,
-        price: 0,
-        is_wax_pair: isWaxPair,
-        has_arbitrage: false,
-        last_updated: new Date().toISOString()
-      };
+      // Only keep one entry per unique pair_key
+      if (!alcorPoolsMap.has(pairKey)) {
+        alcorPoolsMap.set(pairKey, {
+          pair_key: pairKey,
+          dex_source: 'alcor',
+          token0_contract: pool.tokenA.contract,
+          token0_symbol: pool.tokenA.symbol,
+          token1_contract: pool.tokenB.contract,
+          token1_symbol: pool.tokenB.symbol,
+          reserve0: 0,
+          reserve1: 0,
+          tvl_usd: pool.tvlUSD || 0,
+          volume_24h_usd: pool.volumeUSD24 || 0,
+          price: 0,
+          is_wax_pair: isWaxPair,
+          has_arbitrage: false,
+          last_updated: new Date().toISOString()
+        });
+      }
     });
+    const alcorPoolsData = Array.from(alcorPoolsMap.values()).slice(0, 100);
 
     console.log(`Inserting ${alcorPoolsData.length} pools from Alcor...`);
     const { error: alcorPoolsError } = await supabase
@@ -224,27 +234,32 @@ Deno.serve(async (req) => {
     }
 
     // Process and insert markets
-    const marketsData = markets.slice(0, 100).map(market => {
+    const marketsMap = new Map();
+    markets.forEach(market => {
       const [token0, token1] = [market.token0.contract, market.token1.contract].sort();
       const pairKey = `${token0}|${token1}|${market.src}`;
       const isWaxPair = market.token0.contract === 'eosio.token' || market.token1.contract === 'eosio.token';
       const precision = market.token0.symbol.precision - market.token1.symbol.precision;
       const price = market.lastPrice ? market.lastPrice / Math.pow(10, precision) : 0;
       
-      return {
-        pair_key: pairKey,
-        dex_source: market.src,
-        token0_contract: market.token0.contract,
-        token0_symbol: market.token0.symbol.ticker,
-        token1_contract: market.token1.contract,
-        token1_symbol: market.token1.symbol.ticker,
-        last_price_int: market.lastPrice || 0,
-        price: price,
-        last_side: market.lastSide,
-        is_wax_pair: isWaxPair,
-        last_updated: new Date().toISOString()
-      };
+      // Only keep one entry per unique pair_key
+      if (!marketsMap.has(pairKey)) {
+        marketsMap.set(pairKey, {
+          pair_key: pairKey,
+          dex_source: market.src,
+          token0_contract: market.token0.contract,
+          token0_symbol: market.token0.symbol.ticker,
+          token1_contract: market.token1.contract,
+          token1_symbol: market.token1.symbol.ticker,
+          last_price_int: market.lastPrice || 0,
+          price: price,
+          last_side: market.lastSide,
+          is_wax_pair: isWaxPair,
+          last_updated: new Date().toISOString()
+        });
+      }
     });
+    const marketsData = Array.from(marketsMap.values()).slice(0, 100);
 
     console.log(`Inserting ${marketsData.length} markets...`);
     const { error: marketsError } = await supabase
