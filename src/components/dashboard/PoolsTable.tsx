@@ -171,7 +171,7 @@ export const PoolsTable = ({ pools, isLoading }: PoolsTableProps) => {
                       ${formatNumber(pool.volume_24h_usd)}
                     </TableCell>
                     <TableCell className="text-right font-mono text-sm">
-                      {pool.price.toFixed(6)}
+                      {pool.price ? pool.price.toFixed(6) : '0.000000'}
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-2">
