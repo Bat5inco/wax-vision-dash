@@ -8,8 +8,7 @@ export const useDashboardData = () => {
       const { data, error } = await supabase
         .from('pools')
         .select('*')
-        .order('tvl_usd', { ascending: false })
-        .limit(100);
+        .order('tvl_usd', { ascending: false });
       
       if (error) throw error;
       return data;
