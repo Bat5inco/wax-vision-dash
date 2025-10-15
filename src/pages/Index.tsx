@@ -1,22 +1,27 @@
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { PoolsTable } from "@/components/dashboard/PoolsTable";
 import { TopTokens } from "@/components/dashboard/TopTokens";
+import { MarketsTable } from "@/components/dashboard/MarketsTable";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Wallet, 
   TrendingUp, 
   BarChart3, 
   Coins,
   RefreshCw,
-  Activity
+  Activity,
+  Layers,
+  Store
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
 
 const Index = () => {
-  const { pools, tokens, stats, isLoading } = useDashboardData();
+  const { pools, tokens, markets, stats, isLoading } = useDashboardData();
   const [isFetching, setIsFetching] = useState(false);
 
   const formatCurrency = (value: number) => {
@@ -107,40 +112,119 @@ const Index = () => {
           />
         </div>
 
-        {/* Pools Table and Top Tokens */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          <div className="lg:col-span-2">
-            <PoolsTable pools={pools} isLoading={isLoading} />
-          </div>
-          <div>
-            <TopTokens tokens={tokens} isLoading={isLoading} />
-          </div>
-        </div>
+        {/* Tabs Navigation */}
+        <Tabs defaultValue="pools" className="mb-8">
+          <TabsList className="grid w-full grid-cols-3 lg:w-[600px]">
+            <TabsTrigger value="pools" className="flex items-center gap-2">
+              <Layers className="h-4 w-4" />
+              <span>Pools</span>
+            </TabsTrigger>
+            <TabsTrigger value="markets" className="flex items-center gap-2">
+              <Store className="h-4 w-4" />
+              <span>Mercados</span>
+            </TabsTrigger>
+            <TabsTrigger value="tokens" className="flex items-center gap-2">
+              <Coins className="h-4 w-4" />
+              <span>Tokens</span>
+            </TabsTrigger>
+          </TabsList>
 
-        {/* Info Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="p-6 rounded-xl bg-primary/10 border border-primary/20">
-            <h3 className="font-semibold text-lg mb-2 text-primary">Pools WAX</h3>
-            <p className="text-3xl font-bold mb-2">{stats.waxPools}</p>
-            <p className="text-sm text-muted-foreground">
-              Pools contendo o token WAX
-            </p>
+          <TabsContent value="pools" className="mt-6">
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+              <div className="lg:col-span-3">
+                <PoolsTable pools={pools} isLoading={isLoading} />
+              </div>
+              <div>
+                <Card className="p-6 card-gradient border-border/50">
+                  <h3 className="font-semibold text-lg mb-4 text-primary flex items-center gap-2">
+                    <BarChart3 className="h-5 w-5" />
+                    Estatísticas
+                  </h3>
+                  <div className="space-y-4">
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">Total de Pools</p>
+                      <p className="text-2xl font-bold">{stats.totalPools}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">Pools WAX</p>
+                      <p className="text-2xl font-bold">{stats.waxPools}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">TVL Total</p>
+                      <p className="text-xl font-bold">{formatCurrency(stats.totalTvl)}</p>
+                    </div>
+                  </div>
+                </Card>
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="markets" className="mt-6">
+            <MarketsTable markets={markets} isLoading={isLoading} />
+          </TabsContent>
+
+          <TabsContent value="tokens" className="mt-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2">
+                <TopTokens tokens={tokens} isLoading={isLoading} />
+              </div>
+              <div>
+                <Card className="p-6 card-gradient border-border/50">
+                  <h3 className="font-semibold text-lg mb-4 text-primary flex items-center gap-2">
+                    <Coins className="h-5 w-5" />
+                    Resumo de Tokens
+                  </h3>
+                  <div className="space-y-4">
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">Tokens Únicos</p>
+                      <p className="text-2xl font-bold">{stats.uniqueTokens}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">Token WAX</p>
+                      <p className="text-lg font-medium text-accent">eosio.token</p>
+                    </div>
+                  </div>
+                </Card>
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
+
+        {/* Info Footer */}
+        <Card className="p-6 card-gradient border-border/50">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="text-center md:text-left">
+              <h3 className="font-semibold text-lg mb-2 text-primary flex items-center gap-2 justify-center md:justify-start">
+                <Store className="h-5 w-5" />
+                DEXs Monitoradas
+              </h3>
+              <p className="text-2xl font-bold mb-2">Waxonedge, Alcor</p>
+              <p className="text-sm text-muted-foreground">
+                Coletando dados de múltiplas exchanges descentralizadas
+              </p>
+            </div>
+            <div className="text-center">
+              <h3 className="font-semibold text-lg mb-2 text-accent flex items-center gap-2 justify-center">
+                <Activity className="h-5 w-5" />
+                Atualização Automática
+              </h3>
+              <p className="text-2xl font-bold mb-2">30 segundos</p>
+              <p className="text-sm text-muted-foreground">
+                Dados sincronizados automaticamente
+              </p>
+            </div>
+            <div className="text-center md:text-right">
+              <h3 className="font-semibold text-lg mb-2 text-secondary flex items-center gap-2 justify-center md:justify-end">
+                <BarChart3 className="h-5 w-5" />
+                Blockchain
+              </h3>
+              <p className="text-2xl font-bold mb-2">WAX</p>
+              <p className="text-sm text-muted-foreground">
+                Monitoramento completo do ecossistema
+              </p>
+            </div>
           </div>
-          <div className="p-6 rounded-xl bg-secondary/10 border border-secondary/20">
-            <h3 className="font-semibold text-lg mb-2 text-secondary">DEXs Monitoradas</h3>
-            <p className="text-3xl font-bold mb-2">5</p>
-            <p className="text-sm text-muted-foreground">
-              Alcor, Taco, Defibox, Nefty, Adex
-            </p>
-          </div>
-          <div className="p-6 rounded-xl bg-accent/10 border border-accent/20">
-            <h3 className="font-semibold text-lg mb-2 text-accent">Última Atualização</h3>
-            <p className="text-xl font-bold mb-2">Tempo Real</p>
-            <p className="text-sm text-muted-foreground">
-              Dados atualizados a cada 30 segundos
-            </p>
-          </div>
-        </div>
+        </Card>
       </main>
     </div>
   );

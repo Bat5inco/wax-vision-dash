@@ -180,7 +180,7 @@ Deno.serve(async (req) => {
         });
       }
     });
-    const waxonedgePoolsData = Array.from(waxonedgePoolsMap.values()).slice(0, 100);
+    const waxonedgePoolsData = Array.from(waxonedgePoolsMap.values());
 
     console.log(`Inserting ${waxonedgePoolsData.length} pools from Waxonedge...`);
     const { error: waxonedgePoolsError } = await supabase
@@ -220,7 +220,7 @@ Deno.serve(async (req) => {
         });
       }
     });
-    const alcorPoolsData = Array.from(alcorPoolsMap.values()).slice(0, 100);
+    const alcorPoolsData = Array.from(alcorPoolsMap.values());
 
     console.log(`Inserting ${alcorPoolsData.length} pools from Alcor...`);
     const { error: alcorPoolsError } = await supabase
@@ -259,7 +259,7 @@ Deno.serve(async (req) => {
         });
       }
     });
-    const marketsData = Array.from(marketsMap.values()).slice(0, 100);
+    const marketsData = Array.from(marketsMap.values());
 
     console.log(`Inserting ${marketsData.length} markets...`);
     const { error: marketsError } = await supabase
